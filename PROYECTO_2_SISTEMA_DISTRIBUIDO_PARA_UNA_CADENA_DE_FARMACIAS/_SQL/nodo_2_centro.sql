@@ -20,6 +20,7 @@ CREATE SEQUENCE seq_receta     START 10000 MINVALUE 10000 MAXVALUE 19999;
 CREATE SEQUENCE seq_venta      START 10000 MINVALUE 10000 MAXVALUE 19999;
 CREATE SEQUENCE seq_inventario START 10000 MINVALUE 10000 MAXVALUE 19999;
 CREATE SEQUENCE seq_empleado   START 10000 MINVALUE 10000 MAXVALUE 19999;
+CREATE SEQUENCE seq_rol        START 100 MINVALUE 100 MAXVALUE 199
 
 -- =====================================================================
 -- 2. CATALOGOS GLOBALES (mismos datos en los 3 nodos - replicables)
@@ -84,6 +85,20 @@ CREATE TABLE empleados (
     puesto        VARCHAR(30)  NOT NULL
                                CHECK (puesto IN ('Gerente','Farmaceutico','Cajero','Almacenista')),
     fecha_ingreso DATE         NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE rol (
+    id_rol           BIGINT      PRIMARY KEY DEFAULT nextval('seq_rol'),
+    id_empleado      BIGINT      NOT NULL
+                                 REFERENCES empleados(id_empleado) ON DELETE CASCADE,
+    id_sucursal      SMALLINT    NOT NULL DEFAULT 2
+                                 CHECK (id_sucursal = 2)
+                                 REFERENCES sucursales(id_sucursal),
+    nombre_rol       VARCHAR(40) NOT NULL
+                                 CHECK (nombre_rol IN ('Administrador','Gerente','Operador','Auditor','Consulta')),
+    fecha_asignacion DATE        NOT NULL DEFAULT CURRENT_DATE,
+    activo           BOOLEAN     NOT NULL DEFAULT TRUE,
+    UNIQUE (id_empleado, id_sucursal, nombre_rol)
 );
 
 CREATE TABLE inventarios (
