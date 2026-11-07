@@ -26,7 +26,7 @@ body {
   border-radius: 50%;
   background: radial-gradient(circle at 30% 28%, #ffffff 0%, #b9fff0 18%, #19c3a5 55%, #0a6a70 100%);
   box-shadow: inset -18px -22px 40px rgba(0, 40, 50, .45), 0 30px 60px rgba(0, 30, 40, .35);
-  /*animation: flota 9s ease-in-out infinite;*/
+  animation: flota 9s ease-in-out infinite;
 }
 .orb-1 { width: 260px; height: 260px; left: 8%;  top: 14%; }
 .orb-2 { width: 150px; height: 150px; right: 12%; top: 10%; background: radial-gradient(circle at 30% 28%, #fff 0%, #cfe4ff 18%, #4a95f0 55%, #12408f 100%); animation-delay: -3s; }
@@ -38,7 +38,7 @@ body {
   border-radius: 999px;
   background: linear-gradient(90deg, #ffffff 0 50%, #ffd45c 50% 100%);
   box-shadow: inset 0 -10px 16px rgba(0, 0, 0, .22), inset 0 8px 12px rgba(255, 255, 255, .7), 0 24px 40px rgba(0, 30, 40, .35);
-  /*animation: flota 11s ease-in-out infinite;*/
+  animation: flota 11s ease-in-out infinite;
 }
 .pill-1 { left: 18%; bottom: 12%; transform: rotate(-28deg); }
 .pill-2 { right: 30%; top: 6%; width: 110px; height: 42px; transform: rotate(35deg); animation-delay: -4s; background: linear-gradient(90deg, #ff8fa3 0 50%, #fff 50% 100%); }
@@ -156,3 +156,16 @@ input:focus {
 @media (prefers-reduced-motion: reduce) {
   .orb, .pill { animation: none; }
 }
+.alert {
+  margin-bottom: 1.2rem;
+  padding: .7rem .9rem;
+  font-size: .85rem;
+  border-radius: 10px;
+}
+.alert.error {
+  color: #fff;
+  background: rgba(220, 53, 69, .55);
+  border: 1px solid rgba(255, 255, 255, .4);
+}
+.datos { margin-bottom: .5rem; }
+.salir { display: block; margin-top: 1.6rem; text-align: center; text-decoration: none; }

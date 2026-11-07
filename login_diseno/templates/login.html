@@ -21,14 +21,19 @@
     </div>
 
     <main class="stage">
-      <form class="glass" action="{{ url_for('dashboard') }}" method="get">
+      <form class="glass" action="{{ url_for('login') }}" method="post">
         <div class="logo">Farmacia Yza</div>
         <h1>Iniciar sesión</h1>
+        {% with mensajes = get_flashed_messages(with_categories=true) %} {% for
+        categoria, mensaje in mensajes %}
+        <div class="alert {{ categoria }}">{{ mensaje }}</div>
+        {% endfor %} {% endwith %}
 
         <div class="field">
           <label for="usuario">Usuario</label>
           <input
             id="usuario"
+            name="usuario"
             type="text"
             placeholder="usuario"
             autocomplete="off"
@@ -38,7 +43,12 @@
         <div class="field">
           <label for="clave">Contraseña</label>
           <div class="pass">
-            <input id="clave" type="password" placeholder="Contraseña" />
+            <input
+              id="clave"
+              name="clave"
+              type="password"
+              placeholder="Contraseña"
+            />
             <button
               type="button"
               class="eye"

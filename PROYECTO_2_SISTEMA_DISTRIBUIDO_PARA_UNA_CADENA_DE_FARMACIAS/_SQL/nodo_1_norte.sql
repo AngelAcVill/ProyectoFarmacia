@@ -7,10 +7,11 @@
 -- =====================================================================
 
 -- ---------- 0. LIMPIEZA ----------
-DROP TABLE IF EXISTS auditoria, detalle_venta, ventas, recetas, inventarios,
-    empleados, clientes, medicamentos, proveedores, categorias_medicamento,
+DROP TABLE IF EXISTS credenciales, auditoria, detalle_venta, ventas, recetas, inventarios,
+    rol, empleados, clientes, medicamentos, proveedores, categorias_medicamento,
     sucursales CASCADE;
-DROP SEQUENCE IF EXISTS seq_cliente, seq_receta, seq_venta, seq_inventario, seq_empleado;
+DROP SEQUENCE IF EXISTS seq_cliente, seq_receta, seq_venta, seq_inventario,
+    seq_empleado, seq_rol, seq_credencial;
 DROP FUNCTION IF EXISTS fn_auditar() CASCADE;
 
 -- ---------- 1. SECUENCIAS POR RANGO (evita choques de ID entre nodos) ----------
@@ -21,6 +22,7 @@ CREATE SEQUENCE seq_venta      START 1 MINVALUE 1 MAXVALUE 9999;
 CREATE SEQUENCE seq_inventario START 1 MINVALUE 1 MAXVALUE 9999;
 CREATE SEQUENCE seq_empleado   START 1 MINVALUE 1 MAXVALUE 9999;
 CREATE SEQUENCE seq_rol        START 1 MINVALUE 1 MAXVALUE 100;
+CREATE SEQUENCE seq_credencial START 1   MINVALUE 1   MAXVALUE 100;
 
 -- =====================================================================
 -- 2. CATALOGOS GLOBALES (mismos datos en los 3 nodos - replicables)
@@ -100,7 +102,23 @@ CREATE TABLE rol (
     activo           BOOLEAN     NOT NULL DEFAULT TRUE,
     UNIQUE (id_empleado, id_sucursal, nombre_rol)
 );
- 
+
+ CREATE TABLE credenciales (
+    id_credencial     BIGINT       PRIMARY KEY DEFAULT nextval('seq_credencial'),
+    id_empleado       BIGINT       NOT NULL UNIQUE
+                                   REFERENCES empleados(id_empleado) ON DELETE CASCADE,
+    id_sucursal       SMALLINT     NOT NULL DEFAULT 1
+                                   CHECK (id_sucursal = 1)
+                                   REFERENCES sucursales(id_sucursal),
+    usuario           VARCHAR(50)  NOT NULL UNIQUE CHECK (char_length(usuario) >= 4),
+    contrasena_hash   TEXT         NOT NULL,
+    activo            BOOLEAN      NOT NULL DEFAULT TRUE,
+    intentos_fallidos SMALLINT     NOT NULL DEFAULT 0 CHECK (intentos_fallidos >= 0),
+    ultimo_acceso     TIMESTAMPTZ,
+    fecha_creacion    DATE         NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE INDEX idx_credenciales_usuario ON credenciales(usuario);
 
 CREATE TABLE inventarios (
     id_inventario       BIGINT   PRIMARY KEY DEFAULT nextval('seq_inventario'),
