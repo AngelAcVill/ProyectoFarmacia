@@ -1,0 +1,46 @@
+{% from 'partials/_macros.html' import kpi, panel, alertas, acciones %}
+
+<div class="aviso-auditoria">
+  <svg class="ico"><use href="#i-eye" /></svg>
+  <div><strong>Vista de control</strong><p>Consultas de solo lectura sobre {{ u.sucursal }}. Cada movimiento queda registrado en la bitácora.</p></div>
+  <span class="chip-op update">Monitoreo</span>
+</div>
+
+<div class="kpis">
+  {{ kpi('clipboard', 'Movimientos', datos.actividad|length, 'En bitácora', 'teal', 'none') }}
+  {{ kpi('pill', 'Inventarios', datos.inventario|length, 'Productos vigentes', 'blue', 'none') }}
+  {{ kpi('alert', 'Alertas', datos.indicadores.alertas, 'Stock mínimo', 'alerta', 'down') }}
+  {{ kpi('chart', 'Ventas hoy', datos.indicadores.ventas_hoy|money, 'Sucursal', 'morado', 'up') }}
+</div>
+
+{% call panel('Bitácora de auditoría', 'Registro de INSERT, UPDATE y DELETE', 'Tiempo real') %}
+<div class="tabla-wrap">
+  <table class="tabla">
+    <thead><tr><th>Operación</th><th>Tabla afectada</th><th>Fecha y hora</th><th>Registro</th></tr></thead>
+    <tbody>
+      {% for a in datos.actividad %}
+      <tr><td><span class="chip-op {{ a.operacion|lower }}">{{ a.operacion }}</span></td><td class="mono">{{ a.tabla }}</td><td>{{ a.fecha }}</td><td class="mono">#{{ loop.index }}</td></tr>
+      {% else %}<tr><td colspan="4" class="vacio">Sin movimientos registrados.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endcall %}
+
+<div class="rejilla-2 sesion">
+  {{ alertas(datos, 'Control de stock', 'Productos por debajo del mínimo') }}
+  {% call panel('Inventario actual', 'Existencias registradas en el nodo') %}
+  <div class="tabla-wrap tabla-corta">
+    <table class="tabla">
+      <thead><tr><th>Producto</th><th>Exist.</th><th>Mín.</th><th>Estado</th></tr></thead>
+      <tbody>
+        {% for i in datos.inventario %}
+        <tr><td>{{ i.comercial }}</td><td class="fuerte">{{ i.existencia }}</td><td>{{ i.minimo }}</td>
+          <td>{% if i.existencia <= i.minimo %}<span class="chip-critico">Bajo</span>{% else %}<span class="chip-libre">Normal</span>{% endif %}</td></tr>
+        {% else %}<tr><td colspan="4" class="vacio">Sin inventario registrado.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endcall %}
+</div>
+
+{{ acciones(perfil) }}

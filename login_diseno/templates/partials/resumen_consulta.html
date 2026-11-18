@@ -1,0 +1,50 @@
+{% from 'partials/_macros.html' import panel, acciones %}
+
+<div class="aviso-consulta">
+  <span class="icono-ojo"><svg class="ico"><use href="#i-eye" /></svg></span>
+  <div><strong>Modo solo lectura</strong><p>Tu perfil permite consultar catálogo, inventario y recetas sin modificar información.</p></div>
+  <span class="chip-leer">Consulta</span>
+</div>
+
+{% call panel('Catálogo de medicamentos', 'Disponibilidad y presentaciones en ' ~ u.sucursal, datos.catalogo|length ~ ' productos') %}
+<div class="buscador"><svg class="ico"><use href="#i-search" /></svg><input id="buscar-catalogo" type="search" placeholder="Buscar por nombre, marca o sustancia..." /></div>
+<div class="tabla-wrap">
+  <table class="tabla" id="tabla-catalogo">
+    <thead><tr><th>Medicamento</th><th>Presentación</th><th>Precio</th><th>Receta</th><th>Mínimo</th></tr></thead>
+    <tbody>
+      {% for p in datos.catalogo %}
+      <tr class="fila-catalogo" data-nombre="{{ (p.nombre ~ ' ' ~ p.comercial)|lower }}">
+        <td class="fuerte">{{ p.nombre }}</td><td>{{ p.comercial }}</td><td>{{ p.precio }}</td>
+        <td>{% if p.receta %}<span class="chip-receta">Con receta</span>{% else %}<span class="chip-libre">Libre</span>{% endif %}</td>
+        <td>{{ p.minimo }}</td>
+      </tr>
+      {% else %}<tr><td colspan="5" class="vacio">No hay medicamentos registrados.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endcall %}
+
+<div class="rejilla-2">
+  {% call panel('Disponibilidad', 'Existencias actuales', 'En vivo') %}
+  <ul class="ranking">
+    {% for i in datos.inventario %}
+    <li><span class="ranking-num {{ 'critico' if i.existencia <= i.minimo else '' }}"><svg class="ico"><use href="#i-box" /></svg></span>
+      <div class="ranking-nombre"><strong>{{ i.comercial }}</strong><small>{{ i.existencia }} piezas disponibles</small></div>
+      <span class="{{ 'chip-critico' if i.existencia <= i.minimo else 'chip-libre' }}">{{ 'Bajo' if i.existencia <= i.minimo else 'Disponible' }}</span></li>
+    {% else %}<li class="vacio">Sin inventario registrado.</li>{% endfor %}
+  </ul>
+  {% endcall %}
+  {{ acciones(perfil) }}
+</div>
+
+<script>
+  const buscador = document.getElementById('buscar-catalogo');
+  if (buscador) {
+    buscador.addEventListener('input', () => {
+      const texto = buscador.value.trim().toLowerCase();
+      document.querySelectorAll('.fila-catalogo').forEach(fila => {
+        fila.style.display = fila.dataset.nombre.includes(texto) ? '' : 'none';
+      });
+    });
+  }
+</script>

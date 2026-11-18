@@ -1,0 +1,52 @@
+{% from 'partials/_macros.html' import kpi, panel, ventas, acciones %}
+
+<section class="hero-pos">
+  <div class="hero-texto">
+    <span class="hero-tag"><svg class="ico"><use href="#i-clock" /></svg> Turno activo</span>
+    <h2>Hola, {{ u.nombre.split()[0] }} 👋</h2>
+    <p>Registra una venta, busca un medicamento o consulta el inventario de {{ u.sucursal }}.</p>
+    <a href="{{ url_for('dashboard', slug='ventas') }}" class="btn-hero"><svg class="ico"><use href="#i-plus" /></svg> Nueva venta</a>
+  </div>
+  <div class="hero-arte" aria-hidden="true"><span class="hero-pill"></span><span class="hero-orbe"></span><svg class="ico"><use href="#i-cart" /></svg></div>
+</section>
+
+<div class="kpis compactas">
+  {{ kpi('chart', 'Ventas hoy', datos.indicadores.ventas_hoy|money, 'Tu sucursal', 'teal', 'up') }}
+  {{ kpi('receipt', 'Ticket promedio', (datos.indicadores.ventas_hoy / (datos.indicadores.pedidos_hoy or 1))|money, 'Por pedido', 'blue', 'none') }}
+  {{ kpi('pill', 'Medicamentos', datos.indicadores.medicamentos, 'En catálogo', 'morado', 'none') }}
+  {{ kpi('alert', 'Stock bajo', datos.indicadores.alertas, 'Ver alertas', 'alerta', 'down') }}
+</div>
+
+{% call panel('Buscar medicamento', 'Filtra por nombre o presentación', 'Catálogo') %}
+<div class="buscador"><svg class="ico"><use href="#i-search" /></svg><input id="buscar-producto" type="search" placeholder="Ej. Paracetamol, Tempra, Amoxicilina..." /></div>
+<div class="tabla-wrap">
+  <table class="tabla" id="tabla-productos">
+    <thead><tr><th>Medicamento</th><th>Presentación</th><th>Precio</th><th>Receta</th></tr></thead>
+    <tbody>
+      {% for p in datos.catalogo %}
+      <tr class="fila-producto" data-nombre="{{ (p.nombre ~ ' ' ~ p.comercial)|lower }}">
+        <td class="fuerte">{{ p.nombre }}</td><td>{{ p.comercial }}</td><td>{{ p.precio }}</td>
+        <td>{% if p.receta %}<span class="chip-receta">Requiere receta</span>{% else %}<span class="chip-libre">Libre venta</span>{% endif %}</td>
+      </tr>
+      {% else %}<tr><td colspan="4" class="vacio">No hay productos en el catálogo.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endcall %}
+
+<div class="rejilla-2">
+  {{ ventas(datos, 'Últimas ventas') }}
+  {{ acciones(perfil) }}
+</div>
+
+<script>
+  const buscador = document.getElementById('buscar-producto');
+  if (buscador) {
+    buscador.addEventListener('input', () => {
+      const texto = buscador.value.trim().toLowerCase();
+      document.querySelectorAll('.fila-producto').forEach(fila => {
+        fila.style.display = fila.dataset.nombre.includes(texto) ? '' : 'none';
+      });
+    });
+  }
+</script>

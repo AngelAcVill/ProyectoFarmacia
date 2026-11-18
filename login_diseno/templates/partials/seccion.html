@@ -1,0 +1,157 @@
+{% from 'partials/_macros.html' import kpi, panel, tendencia, alertas, acciones %}
+{% set iconos_seccion = {'red':'store','inventario':'pill','alertas':'alert','catalogo':'search','ventas':'chart','historial':'clock','clientes':'users','empleados':'users','usuarios':'users','auditoria':'shield','movimientos':'clipboard','recetas':'receipt','reportes':'chart','ayuda':'shield','configuracion':'settings'} %}
+
+<div class="seccion-banner">
+  <svg class="ico"><use href="#i-{{ iconos_seccion.get(seccion.slug, 'grid') }}" /></svg>
+  <div>
+    <h2>{{ seccion.titulo }}</h2>
+    <p>{{ seccion.descripcion }}</p>
+  </div>
+  <span class="chip-leer">{{ perfil.etiqueta }}</span>
+</div>
+
+{% if seccion.slug == 'red' %}
+<div class="nodos">
+  {% for n in datos.nodos %}
+  <article class="nodo">
+    <div class="nodo-cab"><span class="nodo-icono"><svg class="ico"><use href="#i-store" /></svg></span>
+      <span class="estado {{ 'ok' if n.estado == 'Operativo' else 'mal' }}"><span></span>{{ n.estado }}</span></div>
+    <h4>Sucursal {{ n.nombre }}</h4>
+    <div class="nodo-datos">
+      <div><small>Ventas hoy</small><strong>{{ n.ventas }}</strong></div>
+      <div><small>Productos</small><strong>{{ n.productos }}</strong></div>
+      <div><small>Alertas</small><strong>{{ n.alertas }}</strong></div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% elif seccion.slug in ['inventario', 'alertas', 'catalogo'] %}
+<section class="panel">
+  <div class="panel-cab"><div><h3>{{ seccion.titulo }}</h3><p>Datos del nodo {{ u.sucursal }}</p></div><span class="panel-extra">Solo lectura</span></div>
+  <div class="tabla-wrap">
+    <table class="tabla">
+      <thead><tr><th>Medicamento</th><th>Presentación</th><th>Existencias</th><th>Mínimo</th><th>Precio</th></tr></thead>
+      <tbody>
+        {% for i in datos.inventario %}
+        <tr><td class="fuerte">{{ i.nombre }}</td><td>{{ i.comercial }}</td><td>{{ i.existencia }}</td><td>{{ i.minimo }}</td><td>{{ i.precio }}</td></tr>
+        {% else %}<tr><td colspan="5" class="vacio">Sin datos de inventario.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% elif seccion.slug in ['ventas', 'historial'] %}
+<div class="kpis">
+  {{ kpi('chart', 'Ventas hoy', datos.indicadores.ventas_hoy|money, 'Sucursal', 'teal', 'up') }}
+  {{ kpi('receipt', 'Pedidos hoy', datos.indicadores.pedidos_hoy, 'Registrados', 'blue', 'up') }}
+  {{ kpi('cart', 'Ticket promedio', (datos.indicadores.ventas_hoy / (datos.indicadores.pedidos_hoy or 1))|money, 'Por venta', 'morado', 'none') }}
+</div>
+<section class="panel">
+  <div class="panel-cab"><div><h3>Ventas registradas</h3><p>Folios y totales de la sucursal</p></div></div>
+  <div class="tabla-wrap">
+    <table class="tabla">
+      <thead><tr><th>Folio</th><th>Cliente</th><th>Total</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for v in datos.ventas %}
+        <tr><td class="mono">#{{ v.id }}</td><td>{{ v.cliente }}</td><td class="fuerte">{{ v.total }}</td><td>{{ v.fecha }}</td></tr>
+        {% else %}<tr><td colspan="4" class="vacio">No hay ventas registradas.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% elif seccion.slug in ['clientes'] %}
+<section class="panel">
+  <div class="panel-cab"><div><h3>Clientes registrados</h3><p>Nodo {{ u.sucursal }}</p></div></div>
+  <div class="tabla-wrap">
+    <table class="tabla">
+      <thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Alta</th></tr></thead>
+      <tbody>
+        {% for c in datos.clientes %}
+        <tr><td class="fuerte">{{ c.nombre }}</td><td>{{ c.correo }}</td><td>{{ c.telefono }}</td><td>{{ c.fecha }}</td></tr>
+        {% else %}<tr><td colspan="4" class="vacio">No hay clientes registrados.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% elif seccion.slug in ['empleados', 'usuarios'] %}
+<section class="panel">
+  <div class="panel-cab"><div><h3>{{ seccion.titulo }}</h3><p>Puestos y roles asignados</p></div></div>
+  <div class="tabla-wrap">
+    <table class="tabla">
+      <thead><tr><th>Nombre</th><th>Puesto</th><th>Rol</th><th>Correo</th></tr></thead>
+      <tbody>
+        {% for e in datos.empleados %}
+        <tr><td class="fuerte">{{ e.nombre }}</td><td>{{ e.puesto }}</td><td><span class="chip-rol">{{ e.rol }}</span></td><td>{{ e.correo }}</td></tr>
+        {% else %}<tr><td colspan="4" class="vacio">No hay empleados registrados.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% elif seccion.slug in ['auditoria', 'movimientos'] %}
+<section class="panel">
+  <div class="panel-cab"><div><h3>{{ seccion.titulo }}</h3><p>Registro generado por los triggers de la base</p></div><span class="panel-extra">En vivo</span></div>
+  <div class="tabla-wrap">
+    <table class="tabla">
+      <thead><tr><th>Operación</th><th>Tabla</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for a in datos.actividad %}
+        <tr><td><span class="chip-op {{ a.operacion|lower }}">{{ a.operacion }}</span></td><td class="mono">{{ a.tabla }}</td><td>{{ a.fecha }}</td></tr>
+        {% else %}<tr><td colspan="3" class="vacio">Sin movimientos registrados.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% elif seccion.slug in ['recetas'] %}
+<section class="panel">
+  <div class="panel-cab"><div><h3>Recetas registradas</h3><p>Medicamentos controlados</p></div></div>
+  <div class="tabla-wrap">
+    <table class="tabla">
+      <thead><tr><th>Cliente</th><th>Médico</th><th>Medicamento</th><th>Emisión</th></tr></thead>
+      <tbody>
+        {% for r in datos.recetas %}
+        <tr><td class="fuerte">{{ r.cliente }}</td><td>{{ r.medico }}</td><td>{{ r.medicamento }}</td><td>{{ r.fecha }}</td></tr>
+        {% else %}<tr><td colspan="4" class="vacio">No hay recetas registradas.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% elif seccion.slug == 'reportes' %}
+<div class="kpis">
+  {{ kpi('chart', 'Ventas hoy', datos.indicadores.ventas_hoy|money, 'Sucursal', 'teal', 'up') }}
+  {{ kpi('users', 'Clientes', datos.indicadores.clientes, 'Registrados', 'blue', 'none') }}
+  {{ kpi('alert', 'Alertas', datos.indicadores.alertas, 'Stock', 'alerta', 'down') }}
+</div>
+<div class="rejilla-2">{{ tendencia(datos) }}{{ acciones(perfil) }}</div>
+
+{% elif seccion.slug == 'ayuda' %}
+<section class="panel">
+  <div class="panel-cab"><div><h3>Guía rápida</h3><p>Team Yza · Sistema distribuido</p></div></div>
+  <div class="ayuda-grid">
+    <div><span class="nodo-icono"><svg class="ico"><use href="#i-shield" /></svg></span><h4>Tu perfil</h4><p>{{ perfil.aviso }}</p></div>
+    <div><span class="nodo-icono"><svg class="ico"><use href="#i-store" /></svg></span><h4>Tu nodo</h4><p>Los datos mostrados pertenecen a la sucursal {{ u.sucursal }}.</p></div>
+    <div><span class="nodo-icono"><svg class="ico"><use href="#i-logout" /></svg></span><h4>Salir</h4><p>Usa el botón de salida en la esquina inferior del menú.</p></div>
+  </div>
+</section>
+
+{% else %}
+<div class="rejilla-2">
+  {{ acciones(perfil) }}
+  {% call panel('Configuración de la sesión') %}
+  <div class="detalle-lista">
+    <div><span>Usuario</span><strong>{{ u.usuario }}</strong></div>
+    <div><span>Nombre</span><strong>{{ u.nombre }}</strong></div>
+    <div><span>Puesto</span><strong>{{ u.puesto or '—' }}</strong></div>
+    <div><span>Rol</span><strong>{{ u.rol or 'Sin rol' }}</strong></div>
+    <div><span>Sucursal</span><strong>{{ u.sucursal }}</strong></div>
+  </div>
+  {% endcall %}
+</div>
+{% endif %}
+
+{{ alertas(datos) if seccion.slug in ['alertas', 'inventario', 'reportes'] }}

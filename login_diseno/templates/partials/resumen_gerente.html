@@ -1,0 +1,37 @@
+{% from 'partials/_macros.html' import kpi, panel, tendencia, alertas, ventas, acciones %}
+
+<div class="kpis">
+  {{ kpi('chart', 'Ventas de hoy', datos.indicadores.ventas_hoy|money, 'Sucursal ' ~ u.sucursal, 'teal', 'up') }}
+  {{ kpi('receipt', 'Pedidos', datos.indicadores.pedidos_hoy, 'Hoy', 'blue', 'up') }}
+  {{ kpi('users', 'Clientes', datos.indicadores.clientes, 'Registrados', 'morado', 'none') }}
+  {{ kpi('alert', 'Stock bajo', datos.indicadores.alertas, 'Por reponer', 'alerta', 'down') }}
+</div>
+
+<div class="rejilla-2 sesion">
+  {{ tendencia(datos, 'Ventas de la semana', 'Evolución diaria de la sucursal') }}
+  {{ alertas(datos) }}
+</div>
+
+<div class="rejilla-2 inversa">
+  {% call panel('Productos favoritos', 'Los más vendidos en tu sucursal') %}
+  <ul class="ranking">
+    {% for p in datos.top %}
+    <li><span class="ranking-num">{{ loop.index }}</span><div class="ranking-nombre"><strong>{{ p.nombre }}</strong><div class="mini-barra"><span style="width: {{ (p.unidades / (datos.top[0].unidades or 1) * 100)|round|int }}%"></span></div></div><span class="ranking-importe">{{ p.unidades }} pz</span></li>
+    {% else %}<li class="vacio">Aún no hay ventas registradas.</li>{% endfor %}
+  </ul>
+  {% endcall %}
+  {{ ventas(datos) }}
+</div>
+
+<div class="rejilla-2">
+  {{ acciones(perfil) }}
+  {% call panel('Tu sucursal', 'Datos generales del nodo') %}
+  <div class="detalle-lista">
+    <div><span>Sucursal</span><strong>{{ u.sucursal }}</strong></div>
+    <div><span>Responsable</span><strong>{{ u.nombre }}</strong></div>
+    <div><span>Puesto</span><strong>{{ u.puesto or 'Gerente' }}</strong></div>
+    <div><span>Medicamentos</span><strong>{{ datos.indicadores.medicamentos }}</strong></div>
+    <div><span>Empleados</span><strong>{{ datos.indicadores.empleados }}</strong></div>
+  </div>
+  {% endcall %}
+</div>

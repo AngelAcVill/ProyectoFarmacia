@@ -1,17 +1,22 @@
+from datetime import datetime
+
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import check_password_hash
 from db import todos_los_nodos
+from datos_dashboard import obtener_datos
+from perfiles import obtener_seccion, perfil_de
 
 app = Flask(__name__)
 app.secret_key = "cambia-esta-clave-secreta"  # cámbiala por una cadena larga y propia
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax")
+app.jinja_env.filters["money"] = lambda v: "${:,.2f}".format(float(v or 0))
 
 SUCURSALES = {1: "Norte", 2: "Centro", 3: "Sur"}
 
 SQL_USUARIO = """
     SELECT c.id_empleado, c.usuario, c.contrasena_hash, c.activo,
-           e.nombre, e.id_sucursal, r.nombre_rol
+           e.nombre, e.puesto, e.id_sucursal, r.nombre_rol
     FROM credenciales c
     JOIN empleados e ON e.id_empleado = c.id_empleado
     LEFT JOIN rol r  ON r.id_empleado = c.id_empleado AND r.activo
@@ -78,6 +83,7 @@ def login():
                 "id_empleado": u["id_empleado"],
                 "usuario": u["usuario"],
                 "nombre": u["nombre"],
+                "puesto": u["puesto"],
                 "rol": u["nombre_rol"],
                 "sucursal": SUCURSALES[u["id_sucursal"]],
             }
@@ -95,9 +101,21 @@ def login():
 
 
 @app.route("/dashboard")
+@app.route("/dashboard/<slug>")
 @login_requerido
-def dashboard():
-    return render_template("dashboard.html", u=session["usuario"])
+def dashboard(slug="resumen"):
+    u = session["usuario"]
+    perfil = perfil_de(u.get("rol"))
+    seccion = obtener_seccion(perfil, slug)
+    datos = obtener_datos(u.get("rol"), u.get("sucursal"))
+    return render_template(
+        "dashboard.html",
+        u=u,
+        perfil=perfil,
+        seccion=seccion,
+        datos=datos,
+        hoy=datetime.now().strftime("%d/%m/%Y"),
+    )
 
 
 @app.route("/logout")
